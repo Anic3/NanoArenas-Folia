@@ -1,6 +1,5 @@
 package studio.resonos.nano.core.util.menu;
 
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -9,6 +8,7 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import studio.resonos.nano.NanoArenas;
+import studio.resonos.nano.core.util.FoliaScheduler;
 
 public class MenuListener implements Listener {
 
@@ -60,7 +60,7 @@ public class MenuListener implements Listener {
                 }
 
                 if (event.isCancelled()) {
-                    Bukkit.getScheduler().runTaskLater(NanoArenas.get(), player::updateInventory, 1L);
+                    FoliaScheduler.runTaskLater(NanoArenas.get(), player::updateInventory, 1L);
                 }
             } else {
                 if (event.getCurrentItem() != null) {

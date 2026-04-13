@@ -2,7 +2,6 @@ package studio.resonos.nano.api.command.node;
 
 import lombok.Getter;
 import lombok.SneakyThrows;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
@@ -13,6 +12,7 @@ import studio.resonos.nano.api.command.bukkit.BukkitCommand;
 import studio.resonos.nano.api.command.help.HelpNode;
 import studio.resonos.nano.api.command.paramter.Param;
 import studio.resonos.nano.api.command.paramter.ParamProcessor;
+import studio.resonos.nano.core.util.FoliaScheduler;
 
 import java.lang.reflect.Method;
 import java.util.*;
@@ -252,7 +252,7 @@ public class CommandNode {
         for (int i = 0; i < difference; i++) objects.add(null);
 
         if (async) {
-            Bukkit.getScheduler().runTaskAsynchronously(CommandHandler.getPlugin(), () -> {
+            FoliaScheduler.runTaskAsync(CommandHandler.getPlugin(), () -> {
                 try {
                     method.invoke(parentClass, objects.toArray());
                 } catch (Exception exception) {

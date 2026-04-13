@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
+import studio.resonos.nano.core.util.FoliaScheduler;
 import studio.resonos.nano.api.command.CommandHandler;
 import studio.resonos.nano.api.gui.SpiGUI;
 import studio.resonos.nano.core.arena.Arena;
@@ -68,10 +68,10 @@ public class NanoArenas extends JavaPlugin {
         Bukkit.getConsoleSender().sendMessage(CC.translate(" &aJoin our discord for support &b&ndsc.gg/resonos"));
         Bukkit.getConsoleSender().sendMessage(CC.CHAT_BAR);
         nanoArenas = this;
-        
+
         // Initialize configuration manager first
         configManager = new ConfigurationManager(this);
-        
+
         arenasConfig = new BasicConfigurationFile(this, "arenas");
         spiGUI = new SpiGUI(this);
         manager = new AdminAlertManager();
@@ -81,13 +81,10 @@ public class NanoArenas extends JavaPlugin {
         registerProcessors();
         registerCommands();
         // schedule a short delayed startup pass to allow arenas to load first
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                NanoArenas.get().getLogger().info("Started Reset timer Task");
-                resetScheduler.scheduleAll();
-            }
-        }.runTaskLater(this, 10 * 20L);
+        FoliaScheduler.runTaskLater(this, () -> {
+            NanoArenas.get().getLogger().info("Started Reset timer Task");
+            resetScheduler.scheduleAll();
+        }, 10 * 20L);
     }
 
 
