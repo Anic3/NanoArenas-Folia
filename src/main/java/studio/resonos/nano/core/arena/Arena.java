@@ -247,6 +247,25 @@ public class Arena extends Cuboid {
     }
 
 
+    private boolean shouldRemoveEntity(Entity entity) {
+        if (NanoArenas.get().getConfigManager().shouldRemoveItems() && entity instanceof Item) return true;
+        if (NanoArenas.get().getConfigManager().shouldRemoveProjectiles() && entity instanceof Projectile) return true;
+        if (NanoArenas.get().getConfigManager().shouldRemoveEnderCrystals() && entity instanceof EnderCrystal) return true;
+        if (NanoArenas.get().getConfigManager().shouldRemoveMinecarts() && entity instanceof Minecart) return true;
+        if (NanoArenas.get().getConfigManager().shouldRemoveBoats() && entity instanceof Boat) return true;
+        if (NanoArenas.get().getConfigManager().shouldRemoveFallingBlocks() && entity instanceof FallingBlock) return true;
+        if (NanoArenas.get().getConfigManager().shouldRemoveExplosiveMinecarts() && entity instanceof ExplosiveMinecart) return true;
+
+        for (String customType : NanoArenas.get().getConfigManager().getCustomEntityTypes()) {
+            try {
+                if (entity.getType() == EntityType.valueOf(customType)) return true;
+            } catch (IllegalArgumentException ignored) {
+                // Invalid entity type in config, skip
+            }
+        }
+        return false;
+    }
+
     public void reset() {
         if (!isSetup()) {
             Bukkit.getConsoleSender().sendMessage(CC.translate(NanoArenas.get().getConfigManager().getMessagePrefix() + 
@@ -262,63 +281,34 @@ public class Arena extends Cuboid {
             return;
         }
 
-        // Clean up entities based on configuration
+        // Clean up entities based on configuration. On Folia, every entity
+        // mutation must run on that entity's own region thread; we snapshot
+        // the world entity list and dispatch the per-entity work via the
+        // entity scheduler so resets work whether the cuboid spans one or
+        // many regions.
+        Location lower = getLowerCorner();
+        Location upper = getUpperCorner();
+        boolean spawnMissingLogged = false;
         for (Entity entity : getWorld().getEntities()) {
-            if (entity.getLocation().toVector().isInAABB(getLowerCorner().toVector(), getUpperCorner().toVector())) {
-                boolean shouldRemove = false;
-                
-                // Handle players
-                if (entity instanceof org.bukkit.entity.Player) {
-                    if (NanoArenas.get().getConfigManager().shouldTeleportPlayers()) {
-                        if (spawn != null) {
-                            entity.teleport(spawn);
-                        }else {
-                            Bukkit.getConsoleSender().sendMessage(CC.translate(NanoArenas.get().getConfigManager().getMessagePrefix() +
-                                    NanoArenas.get().getConfigManager().getErrorColor() + "Arena " + this.getName() + " does not have a set spawn. Unable to teleport players."));
-                        }
-                    }
-                    continue;
-                }
-                
-                // Check standard entity types
-                if (NanoArenas.get().getConfigManager().shouldRemoveItems() && entity instanceof Item) {
-                    shouldRemove = true;
-                }
-                if (NanoArenas.get().getConfigManager().shouldRemoveProjectiles() && entity instanceof Projectile) {
-                    shouldRemove = true;
-                }
-                if (NanoArenas.get().getConfigManager().shouldRemoveEnderCrystals() && entity instanceof EnderCrystal) {
-                    shouldRemove = true;
-                }
-                if (NanoArenas.get().getConfigManager().shouldRemoveMinecarts() && entity instanceof Minecart) {
-                    shouldRemove = true;
-                }
-                if (NanoArenas.get().getConfigManager().shouldRemoveBoats() && entity instanceof Boat) {
-                    shouldRemove = true;
-                }
-                if (NanoArenas.get().getConfigManager().shouldRemoveFallingBlocks() && entity instanceof FallingBlock) {
-                    shouldRemove = true;
-                }
-                if (NanoArenas.get().getConfigManager().shouldRemoveExplosiveMinecarts() && entity instanceof ExplosiveMinecart) {
-                    shouldRemove = true;
-                }
-                
-                // Check custom entity types
-                for (String customType : NanoArenas.get().getConfigManager().getCustomEntityTypes()) {
-                    try {
-                        EntityType type = EntityType.valueOf(customType);
-                        if (entity.getType() == type) {
-                            shouldRemove = true;
-                            break;
-                        }
-                    } catch (IllegalArgumentException e) {
-                        // Invalid entity type, skip
+            if (!entity.getLocation().toVector().isInAABB(lower.toVector(), upper.toVector())) {
+                continue;
+            }
+
+            if (entity instanceof org.bukkit.entity.Player) {
+                if (NanoArenas.get().getConfigManager().shouldTeleportPlayers()) {
+                    if (spawn != null) {
+                        FoliaScheduler.teleportEntity(NanoArenas.get(), entity, spawn);
+                    } else if (!spawnMissingLogged) {
+                        spawnMissingLogged = true;
+                        Bukkit.getConsoleSender().sendMessage(CC.translate(NanoArenas.get().getConfigManager().getMessagePrefix() +
+                                NanoArenas.get().getConfigManager().getErrorColor() + "Arena " + this.getName() + " does not have a set spawn. Unable to teleport players."));
                     }
                 }
-                
-                if (shouldRemove) {
-                    entity.remove();
-                }
+                continue;
+            }
+
+            if (shouldRemoveEntity(entity)) {
+                FoliaScheduler.runOnEntity(NanoArenas.get(), entity, entity::remove);
             }
         }
 

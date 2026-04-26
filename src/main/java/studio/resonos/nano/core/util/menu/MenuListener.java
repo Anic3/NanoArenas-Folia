@@ -60,7 +60,7 @@ public class MenuListener implements Listener {
                 }
 
                 if (event.isCancelled()) {
-                    FoliaScheduler.runTaskLater(NanoArenas.get(), player::updateInventory, 1L);
+                    FoliaScheduler.runOnEntityLater(NanoArenas.get(), player, player::updateInventory, 1L);
                 }
             } else {
                 if (event.getCurrentItem() != null) {

@@ -88,6 +88,34 @@ public final class FoliaScheduler {
     // -------------------------------------------------------------------------
 
     /**
+     * Runs {@code task} on the {@code entity}'s region thread. Required on
+     * Folia for any read/write of entity state (teleport, remove, inventory,
+     * teleport, openInventory, etc.).
+     *
+     * @param retired optional callback invoked if the entity is removed before
+     *                the task runs; may be {@code null}
+     */
+    public static void runOnEntity(Plugin plugin, Entity entity, Runnable task,
+                                   Runnable retired) {
+        entity.getScheduler().run(plugin, t -> task.run(), retired);
+    }
+
+    /** Convenience overload with no retired callback. */
+    public static void runOnEntity(Plugin plugin, Entity entity, Runnable task) {
+        runOnEntity(plugin, entity, task, null);
+    }
+
+    /**
+     * Runs {@code task} on the entity's region thread after {@code delayTicks}
+     * ticks. Delay is clamped to a minimum of 1 tick.
+     */
+    public static void runOnEntityLater(Plugin plugin, Entity entity, Runnable task,
+                                        long delayTicks) {
+        entity.getScheduler().runDelayed(plugin, t -> task.run(), null,
+                Math.max(1L, delayTicks));
+    }
+
+    /**
      * Teleports {@code entity} to {@code location} safely.
      * <p>
      * On Folia, entity operations must be performed on the entity's own region
