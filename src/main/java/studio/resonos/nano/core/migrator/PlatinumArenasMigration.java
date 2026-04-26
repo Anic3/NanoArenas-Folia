@@ -9,6 +9,7 @@ import studio.resonos.nano.NanoArenas;
 import studio.resonos.nano.core.arena.Arena;
 import studio.resonos.nano.core.arena.impl.StandaloneArena;
 import studio.resonos.nano.core.util.CC;
+import studio.resonos.nano.core.util.FoliaScheduler;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
@@ -109,7 +110,7 @@ public class PlatinumArenasMigration {
         executor.shutdown();
 
         // Defer expensive schematic creation to async batch operation
-        Bukkit.getScheduler().runTaskAsynchronously(NanoArenas.get(), () -> {
+        FoliaScheduler.runTaskAsync(NanoArenas.get(), () -> {
             for (Arena arena : migratedArenas) {
                 try {
                     arena.createSchematic();
@@ -120,8 +121,8 @@ public class PlatinumArenasMigration {
             }
         });
 
-        // Schedule arenas on main thread (Bukkit requirement)
-        Bukkit.getScheduler().runTask(NanoArenas.get(), () -> {
+        // Schedule arena reset timers on the global region (main on Paper)
+        FoliaScheduler.runTask(NanoArenas.get(), () -> {
             for (Arena arena : migratedArenas) {
                 NanoArenas.get().getResetScheduler().schedule(arena);
             }
@@ -143,8 +144,10 @@ public class PlatinumArenasMigration {
 
     private static void sendMessage(CommandSender sender, String message) {
         String translatedMessage = CC.translate(message);
-        // Thread-safe console logging
-        Bukkit.getScheduler().runTask(NanoArenas.get(), () -> {
+        // Route through the global region scheduler so messages are delivered
+        // safely whether we're called from an async migration thread or the
+        // command thread.
+        FoliaScheduler.runTask(NanoArenas.get(), () -> {
             Bukkit.getConsoleSender().sendMessage(translatedMessage);
             if (sender != null) {
                 sender.sendMessage(translatedMessage);

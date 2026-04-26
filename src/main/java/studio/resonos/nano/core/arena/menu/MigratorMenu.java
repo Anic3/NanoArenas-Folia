@@ -10,6 +10,7 @@ import studio.resonos.nano.api.gui.menu.SGMenu;
 import studio.resonos.nano.core.arena.Arena;
 import studio.resonos.nano.core.migrator.PlatinumArenasMigration;
 import studio.resonos.nano.core.util.CC;
+import studio.resonos.nano.core.util.FoliaScheduler;
 import studio.resonos.nano.core.util.ItemBuilder;
 
 import java.util.List;
@@ -45,7 +46,8 @@ public class MigratorMenu {
 
             player.sendMessage(CC.translate("&8(&b❀&8) &aMigrating from &ePlatinumArenas..."));
             player.sendMessage(CC.translate("&8(&b❀&8) &eThis may take a while depending on size and number of arenas you have."));
-            PlatinumArenasMigration.migrateFromPlatinumArenas(player);
+            FoliaScheduler.runTaskAsync(NanoArenas.get(), () ->
+                    PlatinumArenasMigration.migrateFromPlatinumArenas(player));
 
         }));
 
