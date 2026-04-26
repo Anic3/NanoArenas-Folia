@@ -24,6 +24,7 @@ import studio.resonos.nano.api.event.ArenaResetEvent;
 import studio.resonos.nano.core.arena.impl.StandaloneArena;
 import studio.resonos.nano.core.arena.selection.Schematic;
 import studio.resonos.nano.core.util.CC;
+import studio.resonos.nano.core.util.FoliaScheduler;
 import studio.resonos.nano.core.util.ItemBuilder;
 import studio.resonos.nano.core.util.LocationUtil;
 import studio.resonos.nano.core.util.cuboid.Cuboid;
@@ -328,10 +329,10 @@ public class Arena extends Cuboid {
                 schematic.paste(getWorld(), getUpperX(), getUpperY(), getUpperZ());
                 long end = System.currentTimeMillis();
 
-                Bukkit.getServer().getScheduler().runTask(NanoArenas.get(), () -> {
+                FoliaScheduler.runTask(NanoArenas.get(), () -> {
                     Bukkit.getServer().getPluginManager().callEvent(new ArenaResetEvent(this, end - start, schematic.size));
                     if (NanoArenas.get().getConfigManager().isDebugMode()) {
-                        Bukkit.getConsoleSender().sendMessage(CC.translate(NanoArenas.get().getConfigManager().getMessagePrefix() + 
+                        Bukkit.getConsoleSender().sendMessage(CC.translate(NanoArenas.get().getConfigManager().getMessagePrefix() +
                             NanoArenas.get().getConfigManager().getSuccessColor() + "Reset arena " + this.getName() + " in " + (end - start) + "ms"));
                     }
                 });
