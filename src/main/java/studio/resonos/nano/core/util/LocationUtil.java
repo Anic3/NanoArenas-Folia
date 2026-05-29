@@ -34,6 +34,7 @@ public class LocationUtil {
         World world = Bukkit.getServer().getWorld(split[0]);
 
         if (world == null) {
+            Bukkit.getLogger().warning("[NanoArenas] LocationUtil: world '" + split[0] + "' is not loaded.");
             return null;
         }
 
