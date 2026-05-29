@@ -93,6 +93,13 @@ public class Arena extends Cuboid {
                 Location location1 = LocationUtil.deserialize(configuration.getString(path + ".cuboid.location1"));
                 Location location2 = LocationUtil.deserialize(configuration.getString(path + ".cuboid.location2"));
 
+                if (location1 == null || location2 == null) {
+                    NanoArenas.get().getLogger().warning("Skipping arena '" + arenaName +
+                        "': cuboid location(s) could not be loaded. " +
+                        "The configured world may not be loaded, or the location data is missing.");
+                    continue;
+                }
+
                 Arena arena;
 
                 arena = new StandaloneArena(arenaName, location1, location2);
