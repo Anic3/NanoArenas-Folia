@@ -64,6 +64,8 @@ public class Arena extends Cuboid {
     @Setter
     private boolean autoResetPaused = false;
 
+    private transient Schematic cachedSchematic;
+
     private static final ExecutorService RESET_EXECUTOR = Executors.newSingleThreadExecutor(r -> {
         Thread t = new Thread(r, "Nano-Reset-Thread");
         t.setDaemon(true);
@@ -116,6 +118,7 @@ public class Arena extends Cuboid {
                     arena.setResetTime(configuration.getInt(path + ".resetDelay"));
                 }
 
+                arena.reloadSchematic();
                 Arena.getArenaNames().add(arena.getName());
                 Arena.getArenas().add(arena);
             }
@@ -238,9 +241,10 @@ public class Arena extends Cuboid {
         } catch (IOException e) {
             Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Failed to save: " + getDisplayName());
             e.printStackTrace();
+            return;
         }
 
-
+        reloadSchematic();
     }
 
     public File getSchematicFile() {
@@ -251,6 +255,20 @@ public class Arena extends Cuboid {
 
     public Schematic getSchematic() throws IOException {
         return new Schematic(getSchematicFile());
+    }
+
+    public void reloadSchematic() {
+        File file = getSchematicFile();
+        if (!file.exists()) return;
+        try {
+            cachedSchematic = new Schematic(file);
+        } catch (IOException e) {
+            cachedSchematic = null;
+            Bukkit.getConsoleSender().sendMessage(CC.translate(
+                NanoArenas.get().getConfigManager().getMessagePrefix() +
+                NanoArenas.get().getConfigManager().getErrorColor() +
+                "Failed to cache schematic for arena " + getName()));
+        }
     }
 
 
@@ -293,13 +311,11 @@ public class Arena extends Cuboid {
         // the world entity list and dispatch the per-entity work via the
         // entity scheduler so resets work whether the cuboid spans one or
         // many regions.
-        Location lower = getLowerCorner();
-        Location upper = getUpperCorner();
+        // getNearbyEntities uses the server spatial index — O(k) in arena size,
+        // not O(n) across the whole world.
         boolean spawnMissingLogged = false;
-        for (Entity entity : getWorld().getEntities()) {
-            if (!entity.getLocation().toVector().isInAABB(lower.toVector(), upper.toVector())) {
-                continue;
-            }
+        for (Entity entity : getWorld().getNearbyEntities(getCenter(),
+                getSizeX() / 2.0, getSizeY() / 2.0, getSizeZ() / 2.0)) {
 
             if (entity instanceof org.bukkit.entity.Player) {
                 if (NanoArenas.get().getConfigManager().shouldTeleportPlayers()) {
@@ -322,7 +338,7 @@ public class Arena extends Cuboid {
         Future<?> future = RESET_EXECUTOR.submit(() -> {
             try {
                 long start = System.currentTimeMillis();
-                Schematic schematic = getSchematic();
+                Schematic schematic = cachedSchematic != null ? cachedSchematic : getSchematic();
                 schematic.paste(getWorld(), getUpperX(), getUpperY(), getUpperZ());
                 long end = System.currentTimeMillis();
 

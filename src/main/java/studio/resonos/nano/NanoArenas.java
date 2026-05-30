@@ -14,6 +14,7 @@ import studio.resonos.nano.core.arena.Arena;
 import studio.resonos.nano.core.arena.listener.ArenaResetBroadcastListener;
 import studio.resonos.nano.core.arena.schedule.ArenaResetScheduler;
 import studio.resonos.nano.core.managers.AdminAlertManager;
+import studio.resonos.nano.core.placeholder.NanoArenasExpansion;
 import studio.resonos.nano.core.util.CC;
 import studio.resonos.nano.core.util.Config;
 import studio.resonos.nano.core.util.ConfigurationManager;
@@ -92,6 +93,10 @@ public class NanoArenas extends JavaPlugin {
                 Arena.init();
                 NanoArenas.get().getLogger().info("Started Reset timer Task");
                 resetScheduler.scheduleAll();
+                if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+                    new NanoArenasExpansion(NanoArenas.get()).register();
+                    NanoArenas.get().getLogger().info("PlaceholderAPI expansion registered.");
+                }
             }
         }, this);
     }
