@@ -3,6 +3,9 @@ package studio.resonos.nano;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import studio.resonos.nano.core.util.FoliaScheduler;
 import studio.resonos.nano.api.command.CommandHandler;
@@ -75,16 +78,22 @@ public class NanoArenas extends JavaPlugin {
         arenasConfig = new BasicConfigurationFile(this, "arenas");
         spiGUI = new SpiGUI(this);
         manager = new AdminAlertManager();
-        Arena.init();
         Bukkit.getServer().getPluginManager().registerEvents(new ArenaResetBroadcastListener(manager), this);
         resetScheduler = new ArenaResetScheduler(this);
         registerProcessors();
         registerCommands();
-        // schedule a short delayed startup pass to allow arenas to load first
-        FoliaScheduler.runTaskLater(this, () -> {
-            NanoArenas.get().getLogger().info("Started Reset timer Task");
-            resetScheduler.scheduleAll();
-        }, 10 * 20L);
+
+        // Defer arena loading until ServerLoadEvent so that world-loading plugins
+        // (e.g. MoreFoWorld, Multiverse) have finished loading all custom worlds
+        // before we try to deserialize arena locations.
+        Bukkit.getServer().getPluginManager().registerEvents(new Listener() {
+            @EventHandler
+            public void onServerLoad(ServerLoadEvent event) {
+                Arena.init();
+                NanoArenas.get().getLogger().info("Started Reset timer Task");
+                resetScheduler.scheduleAll();
+            }
+        }, this);
     }
 
 
