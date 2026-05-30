@@ -31,6 +31,7 @@ public class ArenaSetSpawnCommand {
             try {
                 arena.save();
                 arena.createSchematic();
+                arena.reloadSchematic();
                 FoliaScheduler.runTask(NanoArenas.get(), () ->
                         player.sendMessage(CC.translate("&8[&bNanoArenas&8] &aSuccessfully finalized arena &b" + arena.getName() + "&a.")));
             } catch (Exception e) {

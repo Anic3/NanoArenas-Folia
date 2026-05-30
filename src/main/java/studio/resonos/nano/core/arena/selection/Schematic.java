@@ -41,8 +41,11 @@ public class Schematic {
     }
 
     public void paste(World world, int x, int y, int z) {
-        try (EditSession editSession = WorldEdit.getInstance().getEditSessionFactory().getEditSession(BukkitAdapter.adapt(world), -1)) {
-            editSession.setFastMode(NanoArenas.get().getConfigManager().shouldPasteFastMode());
+        try (EditSession editSession = WorldEdit.getInstance()
+                .newEditSessionBuilder()
+                .world(BukkitAdapter.adapt(world))
+                .fastMode(NanoArenas.get().getConfigManager().shouldPasteFastMode())
+                .build()) {
             Operation operation = new ClipboardHolder(clipBoard)
                     .createPaste(editSession)
                     .to(BlockVector3.at(x, y, z))
@@ -50,8 +53,7 @@ public class Schematic {
                     .copyBiomes(NanoArenas.get().getConfigManager().shouldPasteCopyBiomes())
                     .ignoreAirBlocks(NanoArenas.get().getConfigManager().shouldPasteIgnoreAirBlocks())
                     .build();
-            Operations.completeBlindly(operation);
-            //Operations.complete(operation);
+            Operations.complete(operation);
         } catch (Exception e) {
             e.printStackTrace();
         }

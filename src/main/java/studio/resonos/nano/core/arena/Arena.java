@@ -66,11 +66,14 @@ public class Arena extends Cuboid {
 
     private transient Schematic cachedSchematic;
 
-    private static final ExecutorService RESET_EXECUTOR = Executors.newSingleThreadExecutor(r -> {
-        Thread t = new Thread(r, "Nano-Reset-Thread");
-        t.setDaemon(true);
-        return t;
-    });
+    private static final ExecutorService RESET_EXECUTOR = Executors.newFixedThreadPool(
+        Math.max(1, NanoArenas.get().getConfigManager().getResetThreadPoolSize()),
+        r -> {
+            Thread t = new Thread(r, "Nano-Reset-Thread");
+            t.setDaemon(true);
+            return t;
+        }
+    );
 
     private static final ConcurrentMap<String, Future<?>> resetTasks = new ConcurrentHashMap<>();
 
