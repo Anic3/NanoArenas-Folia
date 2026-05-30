@@ -33,8 +33,10 @@ public class StandaloneArena extends Arena {
         configuration.set(path + ".icon.material", getIcon().getType().name());
         configuration.set(path + ".icon.durability", getIcon().getDurability());
         configuration.set(path + ".spawn", LocationUtil.serialize(spawn));
-        configuration.set(path + ".cuboid.location1", LocationUtil.serialize(getLowerCorner()));
-        configuration.set(path + ".cuboid.location2", LocationUtil.serialize(getUpperCorner()));
+        configuration.set(path + ".cuboid.location1",
+                LocationUtil.serialize(getWorldName(), getLowerX(), getLowerY(), getLowerZ()));
+        configuration.set(path + ".cuboid.location2",
+                LocationUtil.serialize(getWorldName(), getUpperX(), getUpperY(), getUpperZ()));
         configuration.set(path + ".resetDelay", getResetTime());
 
         try {

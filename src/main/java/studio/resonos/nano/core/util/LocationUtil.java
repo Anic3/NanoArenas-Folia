@@ -25,6 +25,14 @@ public class LocationUtil {
                 ":" + location.getYaw() + ":" + location.getPitch();
     }
 
+    public static String serialize(String worldName, double x, double y, double z) {
+        if (worldName == null) {
+            return "null";
+        }
+
+        return worldName + ":" + x + ":" + y + ":" + z + ":0.0:0.0";
+    }
+
     public static Location deserialize(String source) {
         if (source == null) {
             return null;

@@ -93,10 +93,20 @@ public class NanoArenas extends JavaPlugin {
         // cancel scheduler tasks
         if (resetScheduler != null) {
             resetScheduler.cancelAll();
-        };
+        }
 
-        Arena.getArenas().forEach(Arena::reset);
-        Arena.getArenas().forEach(Arena::save);
+        // Persist every arena. Guard each save so one failure does not prevent
+        // the remaining arenas from being written. We intentionally do NOT call
+        // reset() here: resetting pastes schematics / uses region schedulers that
+        // are being torn down during disable, which would throw and abort saving.
+        for (Arena arena : Arena.getArenas()) {
+            try {
+                arena.save();
+            } catch (Exception e) {
+                getLogger().severe("Failed to save arena '" + arena.getName()
+                        + "' on shutdown: " + e.getMessage());
+            }
+        }
     }
 
     private void registerProcessors() {
