@@ -7,6 +7,9 @@ authors:
   - Athulsib
 depend:
   - FastAsyncWorldEdit
+softdepend:
+  - MoreFoWorld
+  - PlaceholderAPI
 description: Fast asynchronous arena system. Developed by Resonos Studios.
 permissions:
   nano.admin:
